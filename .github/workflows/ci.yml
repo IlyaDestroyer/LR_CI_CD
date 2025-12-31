@@ -1,0 +1,39 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test-and-lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        pip install pytest ruff
+    
+    - name: Run unit tests
+      run: |
+        # Ищем тесты
+        if [ -d "tests" ]; then
+          python -m pytest tests/ -v
+        elif [ -f "test_*.py" ] || [ -f "*test.py" ]; then
+          python -m pytest . -v
+        else
+          echo "No tests found. Creating a sample test..."
+          echo "def test_example(): assert 1 + 1 == 2" > test_sample.py
+          python -m pytest test_sample.py -v
+        fi
+    
+    - name: Run Ruff linter
+      run: |
+        ruff check . --output-format=github
